@@ -178,6 +178,7 @@ function OnChange(tableBody) {
     const tds = tr.getElementsByTagName("td");
     let shouldHide = false;
     for (let i = 0; i < tds.length; i++) {
+      // Not all columns have filters.
       if (!activeFilters[i]) {
         continue;
       }
