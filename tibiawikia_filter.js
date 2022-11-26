@@ -1,3 +1,5 @@
+const kAllowEmpty = "Empty";
+
 const activeFilters = {};
 
 const HeaderKeys = {
@@ -119,6 +121,20 @@ const FiltersFactory = {
 
     return { checkboxes };
   },
+  SimpleCheckboxWithEmpty: (
+    headerItem,
+    className,
+    filters = [],
+    allChecked = false
+  ) => {
+    filters.push(kAllowEmpty);
+    return FiltersFactory.SimpleCheckbox(
+      headerItem,
+      className,
+      filters,
+      allChecked
+    );
+  },
   SimpleRadio: (
     headerItem,
     className,
@@ -193,16 +209,26 @@ function ApplyOnChange(elements = [], handler) {
 function CreateByContentChangeHandler(options, tableBody, columnIndex) {
   return (event) => {
     const filters = [];
+    let allowEmpty = false;
     for (const option of options) {
       if (option.checked) {
+        if (option.value == kAllowEmpty) {
+          allowEmpty = true;
+          continue;
+        }
         filters.push(option.value);
       }
     }
 
-    if (filters.length == 0) {
+    if (filters.length == 0 && !allowEmpty) {
       activeFilters[columnIndex] = (data) => true;
     } else {
       activeFilters[columnIndex] = (data) => {
+        if (!data.trim()) return allowEmpty;
+
+        // If there's data, allowEmpty is selected, and there are no filters, then only show empty fields.
+        if (filters.length == 0 && allowEmpty) return false;
+
         for (const filter of filters) {
           if (!data.includes(filter)) {
             return false;
@@ -271,7 +297,7 @@ function AppendAttributesFilters(headerItem, tableBody, columnIndex) {
     "shielding",
   ];
 
-  const { checkboxes } = FiltersFactory.SimpleCheckbox(
+  const { checkboxes } = FiltersFactory.SimpleCheckboxWithEmpty(
     headerItem,
     kClassGroup,
     attributes
@@ -287,7 +313,7 @@ function AppendResistanceFilters(headerItem, tableBody, columnIndex) {
   const kClassGroup = "resistance_filter";
   const options = ["physical", "fire", "earth", "ice", "energy", "holy"];
 
-  const { checkboxes } = FiltersFactory.SimpleCheckbox(
+  const { checkboxes } = FiltersFactory.SimpleCheckboxWithEmpty(
     headerItem,
     kClassGroup,
     options
@@ -348,7 +374,7 @@ function AppendVocationFilters(headerItem, tableBody, columnIndex) {
   const kClassGroup = "vocation_filter";
   const options = ["knight", "paladin", "sorcerer", "druid"];
 
-  const { checkboxes } = FiltersFactory.SimpleCheckbox(
+  const { checkboxes } = FiltersFactory.SimpleCheckboxWithEmpty(
     headerItem,
     kClassGroup,
     options
